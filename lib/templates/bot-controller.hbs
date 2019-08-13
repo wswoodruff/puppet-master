@@ -1,0 +1,70 @@
+<html>
+    <style>
+        #currentScreenshot {
+            padding: 30px;
+        }
+    </style>
+
+    <div>
+        <button id='playPause'>Play/Pause</button>
+        <pre>
+            <div id='status'></div>
+        </pre>
+    </div>
+
+
+    <img id='currentScreenshot' src={{screenshotPath}} />
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const screenshotEl = document.getElementById('currentScreenshot');
+
+        // SSE stuff
+        const onOpen = () => console.log('SSE connection opened.');
+        const onClose = () => console.log('SSE connection closed.');
+
+        const es = new EventSource('{{ssePath}}');
+
+        const statusHandler = (status) => {
+
+            const parsedStatus = JSON.parse(status.data);
+
+            if (parsedStatus === 'open') {
+                return;
+            }
+
+            console.log('parsedStatus', parsedStatus);
+
+            statusEl.innerHTML = JSON.stringify(parsedStatus, null, 4);
+
+            if (parsedStatus.isPlaying) {
+                setTimeout(() => {
+
+                    const src = screenshotEl.src.split('?')[0];
+                    screenshotEl.src = src + '?date=' + Date.now();
+                }, 1000);
+            }
+        };
+
+        es.addEventListener('status', statusHandler);
+
+        const endFunc = () => {
+
+            onClose();
+            es.close();
+            es.removeEventListener('status', statusHandler);
+            es.removeEventListener('end', endFunc);
+            es.removeEventListener('open', onOpen);
+            es.removeEventListener('error', onError);
+        };
+
+        const onError = (err) => {
+
+            console.error('SSE Error:\n', err);
+            endFunc();
+        };
+
+        es.addEventListener('error', onError);
+        es.addEventListener('end', endFunc);
+    </script>
+</html>
