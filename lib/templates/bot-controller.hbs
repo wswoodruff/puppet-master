@@ -1,7 +1,6 @@
 <html>
     <head>
         <style>
-            /* Custom styles */
             .mui-appbar.mui-appbar {
                 background-color: #8BC34A;
             }
@@ -21,10 +20,9 @@
             }
             .mui-btn.mui-btn {
                 font-size: 20px;
-                padding: 10px 14px;
                 height: auto;
             }
-            #isPlaying > span {
+            #isPlaying {
                 text-transform: uppercase;
             }
             #statusBar > div {
@@ -34,7 +32,35 @@
                 padding: 10px 14px;
                 margin: 10px;
             }
+            .toolbar {
+                display: flex;
+                flex-flow: column nowrap;
+                align-items: center;
+            }
+            .toolbar-btn.toolbar-btn {
+                height: 55px;
+            }
+            .toolbar-toggle.toolbar-toggle,
+            .toolbar-toggle.toolbar-toggle:active,
+            .toolbar-toggle.toolbar-toggle:focus {
+                background-color: #9E9E9E;
+            }
+            .toolbar-toggle.toolbar-toggle:hover {
+                opacity: 0.7;
+            }
+            .toolbar-toggle.toolbar-toggle .fa-mouse-pointer {
+                padding-left: 4px;
+            }
+            .toolbar-toggle.toolbar-toggle.is-active,
+            .toolbar-toggle.toolbar-toggle.is-active:focus {
+                background-color: #2196F3;
+            }
+            .sending-clicks {
+                cursor: pointer;
+            }
         </style>
+        <!-- load icon font -->
+        <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
         <!-- load MUI -->
         <link href='//cdn.muicss.com/mui-0.9.43/css/mui.min.css' rel='stylesheet' type='text/css' />
         <script src='//cdn.muicss.com/mui-0.9.43/js/mui.min.js'></script>
@@ -45,35 +71,37 @@
             <div class='headline mui--text-headline'><strong>build-a-bot controller for bot '{{botId}}'</strong></div>
         </div>
 
-        <div id='connection' class='title mui--text-title' style='text-align: center;'>Connection: Good</div>
+        <div class='title mui--text-title' style='text-align: center;'>Connection: <span id='connection'>Good</span></div>
 
         <div id='mainContent'>
-            <div class='title mui--text-title'>Status</div>
-
             <div id='statusBar' class='mui-panel'>
-                <div id='isPlaying' class='mui--text-title'>Playing – <span>{{status.isPlaying}}</span></div>
-                <div id='currentStepStatus' class='mui--text-title'>Step – {{status.index}}</div>
-                <div id='currentDirection' class='mui--text-title'>Direction – {{status.direction}}</div>
+                <div class='mui--text-title'>Playing – <span id='isPlaying'>{{status.isPlaying}}</span></div>
+                <div class='mui--text-title'>Step – <span id='currentStepStatus'>{{status.index}}</span></div>
+                <div class='mui--text-title'>Direction – <span id='currentDirection'>{{status.direction}}</span></div>
+            </div>
+
+            <div class='mui-panel'>
+                <button id='playPause' style='margin: 15px 0;' class='mui-btn mui-btn--primary'>Pause</button>
+                <div style='display: flex;'>
+                    <div class='mui-textfield'><input id='setStep' type='text' placeholder='Step' /></div>
+                    <button id='setStepBtn' style='margin: 15px 0 15px 15px;' type='text' class='mui-btn mui-btn--raised'>Set step</button>
+                </div>
             </div>
 
             <div class='mui-container'>
-                <div class='mui-panel'>
-                    <img id='currentScreenshot' src={{screenshotPath}} />
-                </div>
-            </div>
-
-            <div class='title mui--text-title'>Controls</div>
-
-            <div class='mui-panel'>
-                <button id='playPause' class='mui-btn mui-btn--primary'>Pause</button>
-                <div>
-                    <div syle='display: flex !important;' class='mui-textfield'>
-                        <input id='setStep' type='text' placeholder='Step' />
-                        <span id='currentStepControl'>Current: {{status.index}}</span>
+                <div id='mainPanel' class='mui-panel'>
+                    <div id='leftToolbar' class='toolbar'>
+                        <button id='refreshBtn' class="toolbar-btn mui-btn mui-btn--primary mui-btn--fab"><i class="fa fa-refresh"></i></button>
+                        <button id='scrollUpBtn' class="toolbar-btn mui-btn mui-btn--primary mui-btn--fab"><i class="fa fa-arrow-up"></i></button>
+                        <button id='scrollDownBtn' class="toolbar-btn mui-btn mui-btn--primary mui-btn--fab"><i class="fa fa-arrow-down"></i></button>
                     </div>
-                    <button id='setStepBtn' type='text' class='mui-btn mui-btn--raised'>Set step</button>
+                    <img id='currentScreenshot' src={{screenshotPath}} />
+                    <div id='rightToolbar' class='toolbar'>
+                        <button id='clickToggle' class="toolbar-btn toolbar-toggle mui-btn mui-btn--primary mui-btn--fab"><i class="fa fa-mouse-pointer"></i></button>
+                    </div>
                 </div>
             </div>
+
             <pre>
                 <div id='status' class='mui--text-body1'></div>
             </pre>
@@ -84,7 +112,6 @@
         const statusEl = document.getElementById('status');
         const screenshotEl = document.getElementById('currentScreenshot');
         const currentStepStatusEl = document.getElementById('currentStepStatus');
-        const currentStepControlEl = document.getElementById('currentStepControl');
         const currentDirectionEl = document.getElementById('currentDirection');
         const connectionEl = document.getElementById('connection');
         const isPlayingEl = document.getElementById('isPlaying');
@@ -94,17 +121,80 @@
         const setStepEl = document.getElementById('setStep');
         const setStepBtnEl = document.getElementById('setStepBtn');
 
+        // Toolbar
+        const clickToggleEl = document.getElementById('clickToggle');
+        const refreshBtnEl = document.getElementById('refreshBtn');
+        const scrollUpBtnEl = document.getElementById('scrollUpBtn');
+        const scrollDownBtnEl = document.getElementById('scrollDownBtn');
+
         const serverHost = '{{serverUrl}}';
         const botId = '{{botId}}';
 
-        const status = { settings: {} };
+        const status = { serverStatus: {}, toolbar: {} };
+
+        const refreshScreenshot = () => {
+
+            const src = screenshotEl.src.split('?')[0];
+            screenshotEl.src = src + '?date=' + Date.now();
+        };
+
+        // Toolbar
+
+        refreshBtnEl.onclick = () => {
+
+            refreshScreenshot();
+        };
+
+        scrollUpBtnEl.onclick = async () => {
+
+            await fetch(`${serverHost}/bots/${botId}/control`, {
+                method: 'post',
+                body: JSON.stringify({
+                    scroll: { x: 0, y: -400 }
+                })
+            });
+            refreshScreenshot();
+        };
+
+        scrollDownBtnEl.onclick = async () => {
+
+            await fetch(`${serverHost}/bots/${botId}/control`, {
+                method: 'post',
+                body: JSON.stringify({
+                    scroll: { x: 0, y: 400 }
+                })
+            });
+            refreshScreenshot();
+        };
+
+        // Screenshot click listener
+
+        screenshotEl.addEventListener('click', async (evt) => {
+
+            if (status.toolbar.click) {
+
+                const { x: elX, y: elY } = screenshotEl.getBoundingClientRect();
+
+                await fetch(`${serverHost}/bots/${botId}/control`, {
+                    method: 'post',
+                    body: JSON.stringify({
+                        click: { x: evt.clientX - elX, y: evt.clientY - elY }
+                    })
+                });
+
+                setTimeout(() => {
+
+                    refreshScreenshot();
+                }, 100);
+            }
+        });
 
         playPauseEl.onclick = () => {
 
             fetch(`${serverHost}/bots/${botId}/control`, {
                 method: 'post',
                 body: JSON.stringify({
-                    setting: 'isPlaying', val: !status.settings.isPlaying
+                    setting: 'isPlaying', val: !status.serverStatus.isPlaying
                 })
             });
         };
@@ -119,11 +209,27 @@
             });
         };
 
+        clickToggleEl.onclick = () => {
+
+            status.toolbar.click = !status.toolbar.click;
+
+            if (status.toolbar.click) {
+                clickToggleEl.classList.add('is-active');
+                screenshotEl.classList.add('sending-clicks');
+            }
+            else {
+                clickToggleEl.classList.remove('is-active');
+                screenshotEl.classList.remove('sending-clicks');
+            }
+
+            clickToggleEl.blur();
+        };
+
         // SSE stuff
         const onOpen = () => console.log('SSE connection opened.');
         const onClose = () => {
 
-            connectionEl.innerHTML = 'Connection: Disconnected';
+            connectionEl.innerHTML = 'Disconnected';
             console.log('SSE connection closed.')
         };
 
@@ -137,15 +243,15 @@
 
             const parsedStatus = JSON.parse(msg.data);
 
-            status.settings = parsedStatus;
+            status.serverStatus = parsedStatus;
 
             // Status
-            currentStepStatusEl.innerHTML = `Step – ${status.settings.index}`;
-            isPlayingEl.innerHTML = `Playing – <span>${status.settings.isPlaying}</span>`;
-            currentDirectionEl.innerHTML = `Direction – ${status.settings.direction === 'forward' ? 'Fwd' : 'Backward'}`;
+            currentStepStatusEl.innerHTML = status.serverStatus.index;
+            isPlayingEl.innerHTML = status.serverStatus.isPlaying;
+            currentDirectionEl.innerHTML = status.serverStatus.direction === 'forward' ? 'Fwd' : 'Backward';
 
             // Controls
-            playPauseEl.innerHTML = status.settings.isPlaying ? 'Pause' : 'Play';
+            playPauseEl.innerHTML = status.serverStatus.isPlaying ? 'Pause' : 'Play';
 
             // For debug, but it's annoying
             // statusEl.innerHTML = JSON.stringify(parsedStatus, null, 4);
