@@ -16,7 +16,6 @@
                 display: flex;
                 flex-flow: row wrap;
                 justify-content: space-between;
-
             }
             .mui-btn.mui-btn {
                 font-size: 20px;
@@ -36,6 +35,7 @@
                 display: flex;
                 flex-flow: column nowrap;
                 align-items: center;
+                padding: 0 15px;
             }
             .toolbar-btn.toolbar-btn {
                 height: 55px;
@@ -51,6 +51,12 @@
             .toolbar-toggle.toolbar-toggle .fa-mouse-pointer {
                 padding-left: 4px;
             }
+            .toolbar-btn.toolbar-btn .fa-chevron-left {
+                margin-right: 2px;
+            }
+            .toolbar-btn.toolbar-btn .fa-chevron-right {
+                margin-left: 4px;
+            }
             .toolbar-toggle.toolbar-toggle.is-active,
             .toolbar-toggle.toolbar-toggle.is-active:focus {
                 background-color: #2196F3;
@@ -58,17 +64,88 @@
             .sending-clicks {
                 cursor: pointer;
             }
+            #url {
+                width: 350px;
+                margin-left: 18px;
+            }
+            #topToolbar {
+                display: flex;
+                flex-flow: row nowrap;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 8px;
+            }
+            #leftToolbar,
+            #rightToolbar {
+                padding-top: 72px;
+            }
+            #bottomToolbar {
+                margin-top: 20px;
+            }
+            #mainPanel {
+                display: flex;
+                flex-flow: row nowrap;
+                justify-content: center;
+            }
+            .current-step.current-step {
+                background-color: rgba(33 ,150 ,243, 0.3) !important;
+            }
+            .code {
+                width: 642px;
+            }
+
+            /* edit-toggle */
+            .edit-toggle.edit-toggle,
+            .edit-toggle.edit-toggle:active,
+            .edit-toggle.edit-toggle:focus {
+                /* Grey */
+                background-color: #9E9E9E;
+            }
+            .edit-toggle.edit-toggle:hover {
+                /* Green */
+                background-color: #8BC34A;
+                opacity: 0.7;
+            }
+            .edit-toggle.edit-toggle.is-active,
+            .edit-toggle.edit-toggle.is-active:focus {
+                /* Green */
+                background-color: #8BC34A;
+            }
+
+            /* save-btn */
+            .save-btn.save-btn,
+            .save-btn.save-btn:active,
+            .save-btn.save-btn:focus {
+                /* Grey */
+                background-color: #9E9E9E;
+            }
+            .save-btn.save-btn:hover {
+                background-color: #2196F3;
+                opacity: 0.7;
+            }
+            .save-btn.save-btn.is-active,
+            .save-btn.save-btn.is-active:focus {
+                /* Blue */
+                background-color: #2196F3;
+            }
         </style>
         <!-- load icon font -->
-        <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+        <link href='//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' type='text/css' />
         <!-- load MUI -->
         <link href='//cdn.muicss.com/mui-0.9.43/css/mui.min.css' rel='stylesheet' type='text/css' />
         <script src='//cdn.muicss.com/mui-0.9.43/js/mui.min.js'></script>
+
+        <!-- Load CodeMirror -->
+        <script src='/codemirror/lib/codemirror.js'></script>
+        <link rel='stylesheet' href='/codemirror/lib/codemirror.css'>
+        <script src='/codemirror/mode/javascript/javascript.js'></script>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js'></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.10.2/beautify.min.js"></script>
     </head>
 
     <body>
         <div class='mui-appbar'>
-            <div class='headline mui--text-headline'><strong>build-a-bot controller for bot '{{botId}}'</strong></div>
+            <div class='headline mui--text-headline'><strong>puppet-master controller for bot '{{botId}}'</strong></div>
         </div>
 
         <div class='title mui--text-title' style='text-align: center;'>Connection: <span id='connection'>Good</span></div>
@@ -82,22 +159,54 @@
 
             <div class='mui-panel'>
                 <button id='playPause' style='margin: 15px 0;' class='mui-btn mui-btn--primary'>Pause</button>
+                <div style='display: flex; flex-flow: column nowrap; position: relative;'>
+                    <div id='playOneStatus' style='position: absolute; top: -5px;'></div>
+                    <button id='playOne' disabled style='margin: 15px 0;' class='mui-btn mui-btn--primary'>Play 1</button>
+                </div>
                 <div style='display: flex;'>
                     <div class='mui-textfield'><input id='setStep' type='text' placeholder='Step' /></div>
                     <button id='setStepBtn' style='margin: 15px 0 15px 15px;' type='text' class='mui-btn mui-btn--raised'>Set step</button>
                 </div>
             </div>
 
-            <div class='mui-container'>
-                <div id='mainPanel' class='mui-panel'>
+            <div>
+                <div id='mainPanel'>
                     <div id='leftToolbar' class='toolbar'>
-                        <button id='refreshBtn' class="toolbar-btn mui-btn mui-btn--primary mui-btn--fab"><i class="fa fa-refresh"></i></button>
-                        <button id='scrollUpBtn' class="toolbar-btn mui-btn mui-btn--primary mui-btn--fab"><i class="fa fa-arrow-up"></i></button>
-                        <button id='scrollDownBtn' class="toolbar-btn mui-btn mui-btn--primary mui-btn--fab"><i class="fa fa-arrow-down"></i></button>
+                        <button id='refreshBtn' class='toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-refresh'></i></button>
+                        <button id='scrollUpBtn' class='toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-arrow-up'></i></button>
+                        <button id='scrollDownBtn' class='toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-arrow-down'></i></button>
                     </div>
-                    <img id='currentScreenshot' src={{screenshotPath}} />
+                    <div style='text-align: center;'>
+                        <div id='topToolbar'>
+                            <button id='navBack' class='toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-chevron-left'></i></button>
+                            <button id='navFwd' class='toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-chevron-right'></i></button>
+                            <div class='mui-textfield'><input id='url' type='text' placeholder='http://' /></div>
+                            <button id='gotoUrl' style='margin: 15px 0 15px 15px;' class='mui-btn mui-btn--primary'>Go</button>
+                        </div>
+                        <img id='currentScreenshot' src={{screenshotPath}} />
+                        <div id='bottomToolbar'>
+                            <table class='mui-table'>
+                                <thead>
+                                    <tr>
+                                        <th>Draft Bot Script</th>
+                                        <td><button id='saveDraftBotScript' class='toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-floppy-o'></i></button></td>
+                                    </tr>
+                                </thead>
+                                <tbody id='draftBotScript'>
+                                    {{#each status.draftBotScript}}
+                                        <tr id='step{{@index}}'>
+                                            <td class='step-name'>Step {{@index}}</td>
+                                            <td class='code'>{{this}}</td>
+                                            <td><button id='edit{{@index}}' class='edit-toggle toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-pencil'></i></button></td>
+                                            <td><button disabled id='save{{@index}}' class='save-btn toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-floppy-o'></i></button></td>
+                                        </tr>
+                                    {{/each}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                     <div id='rightToolbar' class='toolbar'>
-                        <button id='clickToggle' class="toolbar-btn toolbar-toggle mui-btn mui-btn--primary mui-btn--fab"><i class="fa fa-mouse-pointer"></i></button>
+                        <button id='clickToggle' class='toolbar-btn toolbar-toggle mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-mouse-pointer'></i></button>
                     </div>
                 </div>
             </div>
@@ -118,8 +227,11 @@
 
         // Controls
         const playPauseEl = document.getElementById('playPause');
+        const playOneEl = document.getElementById('playOne');
+        const playOneStatusEl = document.getElementById('playOneStatus');
         const setStepEl = document.getElementById('setStep');
         const setStepBtnEl = document.getElementById('setStepBtn');
+        const saveDraftBotScriptEl = document.getElementById('saveDraftBotScript');
 
         // Toolbar
         const clickToggleEl = document.getElementById('clickToggle');
@@ -127,10 +239,15 @@
         const scrollUpBtnEl = document.getElementById('scrollUpBtn');
         const scrollDownBtnEl = document.getElementById('scrollDownBtn');
 
+        const urlEl = document.getElementById('url');
+        const navBackEl = document.getElementById('navBack');
+        const navFwdEl = document.getElementById('navFwd');
+        const gotoUrlEl = document.getElementById('gotoUrl');
+
         const serverHost = '{{serverUrl}}';
         const botId = '{{botId}}';
 
-        const status = { serverStatus: {}, toolbar: {} };
+        const status = { serverStatus: {}, toolbar: {}, editing: null };
 
         const refreshScreenshot = () => {
 
@@ -140,9 +257,64 @@
 
         // Toolbar
 
-        refreshBtnEl.onclick = () => {
+        refreshBtnEl.onclick = async () => {
 
-            refreshScreenshot();
+            await fetch(`${serverHost}/bots/${botId}/control`, {
+                method: 'post',
+                body: JSON.stringify({
+                    refresh: true
+                })
+            });
+
+            setTimeout(() => {
+
+                refreshScreenshot();
+            }, 100);
+        };
+
+        navBackEl.onclick = async () => {
+
+            await fetch(`${serverHost}/bots/${botId}/control`, {
+                method: 'post',
+                body: JSON.stringify({
+                    navigate: { back: true }
+                })
+            });
+
+            setTimeout(() => {
+
+                refreshScreenshot();
+            }, 100);
+        };
+
+        navFwdEl.onclick = async () => {
+
+            await fetch(`${serverHost}/bots/${botId}/control`, {
+                method: 'post',
+                body: JSON.stringify({
+                    navigate: { forward: true }
+                })
+            });
+
+            setTimeout(() => {
+
+                refreshScreenshot();
+            }, 100);
+        };
+
+        gotoUrlEl.onclick = async () => {
+
+            await fetch(`${serverHost}/bots/${botId}/control`, {
+                method: 'post',
+                body: JSON.stringify({
+                    navigate: { url: urlEl.value }
+                })
+            });
+
+            setTimeout(() => {
+
+                refreshScreenshot();
+            }, 100);
         };
 
         scrollUpBtnEl.onclick = async () => {
@@ -168,7 +340,6 @@
         };
 
         // Screenshot click listener
-
         screenshotEl.addEventListener('click', async (evt) => {
 
             if (status.toolbar.click) {
@@ -178,7 +349,8 @@
                 await fetch(`${serverHost}/bots/${botId}/control`, {
                     method: 'post',
                     body: JSON.stringify({
-                        click: { x: evt.clientX - elX, y: evt.clientY - elY }
+                        click: { coords: { x: evt.clientX - elX, y: evt.clientY - elY } },
+                        refresh: true
                     })
                 });
 
@@ -194,7 +366,17 @@
             fetch(`${serverHost}/bots/${botId}/control`, {
                 method: 'post',
                 body: JSON.stringify({
-                    setting: 'isPlaying', val: !status.serverStatus.isPlaying
+                    status: { setting: 'isPlaying', val: !status.serverStatus.isPlaying }
+                })
+            });
+        };
+
+        playOneEl.onclick = () => {
+
+            fetch(`${serverHost}/bots/${botId}/control`, {
+                method: 'post',
+                body: JSON.stringify({
+                    playOne: true
                 })
             });
         };
@@ -204,9 +386,16 @@
             fetch(`${serverHost}/bots/${botId}/control`, {
                 method: 'post',
                 body: JSON.stringify({
-                    setting: 'index', val: setStepEl.value
+                    status: { setting: 'index', val: setStepEl.value }
                 })
             });
+        };
+
+        saveDraftBotScriptEl.onclick = () => {
+
+            // Save draft bot script to disk
+            var blob = new Blob([status.serverStatus.draftBotScript], { type: 'text/javascript;charset=utf-8' });
+            saveAs(blob, `bot-script-${Date.now()}.js`);
         };
 
         clickToggleEl.onclick = () => {
@@ -225,7 +414,131 @@
             clickToggleEl.blur();
         };
 
-        // SSE stuff
+
+        //
+
+
+        const onClickEditToggle = (evt) => {
+
+            const step = String(evt.currentTarget.id).split('edit')[1];
+
+            console.log('step', step);
+            console.log('status.editing', status.editing);
+
+            if (status.editing !== null) {
+                const editingStepCode = document.querySelector(`#step${status.editing} .code`);
+                const editingToggleBtn = document.querySelector(`#edit${status.editing}`);
+                const saveBtn = document.querySelector(`#save${status.editing}`);
+
+                editingToggleBtn.classList.remove('is-active');
+                saveBtn.classList.remove('is-active');
+                saveBtn.disabled = true;
+
+                // This is the time to ask if they want to save what they've been editing
+                // Can serialize the string being edited in the CodeMirror instance,
+                // (strip out all whitespace) — then compare with the same step from the server
+                // to see if there's been a difference.
+
+                editingStepCode.innerHTML = status.serverStatus.draftBotScript[status.editing];
+
+                // Allow us to toggle this on and off for a single step if we want
+                if (status.editing === step) {
+                    status.editing = null;
+                    return;
+                }
+            }
+
+            status.editing = step;
+
+            const newEditingStepCode = document.querySelector(`#step${step} .code`);
+            const newEditingToggleBtn = document.getElementById(`edit${step}`);
+            const newSaveBtn = document.getElementById(`save${step}`);
+
+            console.log('newEditingToggleBtn', newEditingToggleBtn);
+
+            newEditingToggleBtn.classList.add('is-active');
+            newSaveBtn.classList.add('is-active');
+            newSaveBtn.disabled = false;
+
+            // Clear this out first
+            newEditingStepCode.innerHTML = '';
+
+            var myCodeMirror = CodeMirror(newEditingStepCode, {
+                value: js_beautify(status.serverStatus.draftBotScript[step]),
+                mode:  'javascript'
+            });
+        };
+
+        const draftBotScriptEl = document.getElementById('draftBotScript');
+
+        const statusHandler = (msg) => {
+
+            // Yes, the string 'undefined'. This points to a server issue,
+            // will look into it later
+            if (!msg.data || msg.data === 'undefined' || msg.data === 'open') {
+                return;
+            }
+
+            const parsedStatus = JSON.parse(msg.data);
+
+            status.serverStatus = parsedStatus;
+
+            if (status.editing === null) {
+                // Remove listeners
+                Array.from(draftBotScriptEl.querySelectorAll('.edit-toggle')).forEach((el) => {
+
+                    el.removeEventListener('click', onClickEditToggle);
+                });
+
+                // Add new elements
+                draftBotScriptEl.innerHTML = status.serverStatus.draftBotScript.map((scriptFunc, i) => (`
+                    <tr id='step${i}'>
+                        <td class='step-name'>Step ${i}</td>
+                        <td class='code'>${scriptFunc}</td>
+                        <td><button id='edit${i}' class='edit-toggle toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-pencil'></i></button></td>
+                        <td><button disabled id='save${i}' class='save-btn toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-floppy-o'></i></button></td>
+                    </tr>
+                `)).join('');
+
+                // Add listeners to new elements
+                Array.from(draftBotScriptEl.querySelectorAll('.edit-toggle')).forEach((el) => {
+
+                    el.addEventListener('click', onClickEditToggle);
+                });
+            }
+
+
+            // Status
+            currentStepStatusEl.innerHTML = status.serverStatus.index;
+            isPlayingEl.innerHTML = status.serverStatus.isPlaying;
+            currentDirectionEl.innerHTML = status.serverStatus.direction === 'forward' ? 'Fwd' : 'Backward';
+
+            // Controls
+            setStepEl.placeholder = `Step ${status.serverStatus.index}`;
+            playPauseEl.innerHTML = status.serverStatus.isPlaying ? 'Pause' : 'Play';
+            playOneEl.disabled = status.serverStatus.isPlaying;
+            playOneStatusEl.innerHTML = status.serverStatus.playOne;
+
+            // Toolbar
+            urlEl.value = status.serverStatus.url;
+
+            // For debug, but it's annoying
+            // statusEl.innerHTML = JSON.stringify(status.serverStatus, null, 4);
+
+            if (status.serverStatus.isPlaying) {
+                setTimeout(() => {
+
+                    const src = screenshotEl.src.split('?')[0];
+                    // This date param is set for the browser,
+                    // to prevent caching the image
+                    screenshotEl.src = src + '?date=' + Date.now();
+                }, 800);
+            }
+        };
+
+
+        // SSE Stuff
+
         const onOpen = () => console.log('SSE connection opened.');
         const onClose = () => {
 
@@ -234,36 +547,6 @@
         };
 
         const es = new EventSource('{{ssePath}}');
-
-        const statusHandler = (msg) => {
-
-            if (msg.data === 'open') {
-                return;
-            }
-
-            const parsedStatus = JSON.parse(msg.data);
-
-            status.serverStatus = parsedStatus;
-
-            // Status
-            currentStepStatusEl.innerHTML = status.serverStatus.index;
-            isPlayingEl.innerHTML = status.serverStatus.isPlaying;
-            currentDirectionEl.innerHTML = status.serverStatus.direction === 'forward' ? 'Fwd' : 'Backward';
-
-            // Controls
-            playPauseEl.innerHTML = status.serverStatus.isPlaying ? 'Pause' : 'Play';
-
-            // For debug, but it's annoying
-            // statusEl.innerHTML = JSON.stringify(parsedStatus, null, 4);
-
-            if (parsedStatus.isPlaying) {
-                setTimeout(() => {
-
-                    const src = screenshotEl.src.split('?')[0];
-                    screenshotEl.src = src + '?date=' + Date.now();
-                }, 1000);
-            }
-        };
 
         es.addEventListener('status', statusHandler);
 

@@ -1,5 +1,5 @@
 {
-  "name": "build-a-bot",
+  "name": "puppet-master",
   "version": "0.0.1",
   "description": "",
   "author": "wsw",
@@ -17,9 +17,10 @@
   "dependencies": {
     "@hapi/boom": "^7.4.2",
     "@hapi/joi": "^15.1.0",
-    "clickity": "^2.1.3",
+    "clickity": "^2.2.0",
     "handlebars": "^4.1.2",
     "haute-couture": "3.x.x",
+    "inert": "^5.1.3",
     "joi": "^14.3.1",
     "schmervice": "^1.2.0",
     "susie": "^3.0.0",
