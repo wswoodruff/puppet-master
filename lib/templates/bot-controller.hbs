@@ -394,7 +394,10 @@
         saveDraftBotScriptEl.onclick = () => {
 
             // Save draft bot script to disk
-            var blob = new Blob([status.serverStatus.draftBotScript], { type: 'text/javascript;charset=utf-8' });
+
+            const blobString = `'use strict';\n\nmodule.exports = [${status.serverStatus.draftBotScript}];`;
+
+            var blob = new Blob([blobString], { type: 'text/javascript;charset=utf-8' });
             saveAs(blob, `bot-script-${Date.now()}.js`);
         };
 
@@ -421,9 +424,6 @@
         const onClickEditToggle = (evt) => {
 
             const step = String(evt.currentTarget.id).split('edit')[1];
-
-            console.log('step', step);
-            console.log('status.editing', status.editing);
 
             if (status.editing !== null) {
                 const editingStepCode = document.querySelector(`#step${status.editing} .code`);
@@ -454,8 +454,6 @@
             const newEditingToggleBtn = document.getElementById(`edit${step}`);
             const newSaveBtn = document.getElementById(`save${step}`);
 
-            console.log('newEditingToggleBtn', newEditingToggleBtn);
-
             newEditingToggleBtn.classList.add('is-active');
             newSaveBtn.classList.add('is-active');
             newSaveBtn.disabled = false;
@@ -467,6 +465,22 @@
                 value: js_beautify(status.serverStatus.draftBotScript[step]),
                 mode:  'javascript'
             });
+        };
+
+        const onSaveStep = async (evt) => {
+
+            const step = String(evt.currentTarget.id).split('save')[1];
+            const stepText = document.querySelector('.CodeMirror').innerText;
+
+            await fetch(`${serverHost}/bots/${botId}/control`, {
+                method: 'post',
+                body: JSON.stringify({
+                    update: { index: step, value: stepText }
+                })
+            });
+
+            const editBtnEl = document.querySelector(`#edit${step}`);
+            editBtnEl.click();
         };
 
         const draftBotScriptEl = document.getElementById('draftBotScript');
@@ -490,6 +504,11 @@
                     el.removeEventListener('click', onClickEditToggle);
                 });
 
+                Array.from(draftBotScriptEl.querySelectorAll('.save-btn')).forEach((el) => {
+
+                    el.removeEventListener('click', onSaveStep);
+                });
+
                 // Add new elements
                 draftBotScriptEl.innerHTML = status.serverStatus.draftBotScript.map((scriptFunc, i) => (`
                     <tr id='step${i}'>
@@ -504,6 +523,11 @@
                 Array.from(draftBotScriptEl.querySelectorAll('.edit-toggle')).forEach((el) => {
 
                     el.addEventListener('click', onClickEditToggle);
+                });
+
+                Array.from(draftBotScriptEl.querySelectorAll('.save-btn')).forEach((el) => {
+
+                    el.addEventListener('click', onSaveStep);
                 });
             }
 
