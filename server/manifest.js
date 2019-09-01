@@ -31,7 +31,9 @@ module.exports = new Confidence.Store({
         plugins: [
             {
                 plugin: '../lib', // Main plugin
-                options: {}
+                options: {
+                    killChromiumOnExit: process.env.KILL_CHROMIUM_ON_EXIT === '1'
+                }
             },
             {
                 plugin: {

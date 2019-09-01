@@ -504,7 +504,11 @@
                 draftBotScript: parsedStatus.draftBotScript.map((s) => {
 
                     const newScript = s
+                        // For functions formatted like 'async (page, context) => {'
                         .replace(/^.*{/, '')
+                        // For functions formatted like 'async function anonymous (page,context ) {'
+                        // This format comes from creating an AsyncFunction from a string,
+                        // which is what we do server-side in the update step function
                         .replace(/async function anonymous\(page,context\n\) \{\n/, '')
 
                     return `async (page, context) => {${newScript}`;

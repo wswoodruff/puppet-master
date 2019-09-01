@@ -18,6 +18,7 @@
     "@hapi/boom": "^7.4.2",
     "@hapi/joi": "^15.1.0",
     "clickity": "^2.2.0",
+    "exiting": "^4.1.0",
     "handlebars": "^4.1.2",
     "haute-couture": "3.x.x",
     "inert": "^5.1.3",
