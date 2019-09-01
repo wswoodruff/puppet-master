@@ -469,6 +469,15 @@
                 mode:  'javascript',
                 indentUnit: 4
             });
+
+            // Now pause the bot
+
+            fetch(`${serverHost}/bots/${botId}/control`, {
+                method: 'post',
+                body: JSON.stringify({
+                    status: { setting: 'isPlaying', val: false }
+                })
+            });
         };
 
         const onSaveStep = async (evt) => {
