@@ -128,6 +128,9 @@
                 /* Blue */
                 background-color: #2196F3;
             }
+            .CodeMirror.CodeMirror {
+                height: auto;
+            }
         </style>
         <!-- load icon font -->
         <link href='//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' type='text/css' />
@@ -463,7 +466,8 @@
 
             var myCodeMirror = CodeMirror(newEditingStepCode, {
                 value: js_beautify(status.serverStatus.draftBotScript[step]),
-                mode:  'javascript'
+                mode:  'javascript',
+                indentUnit: 4
             });
         };
 
@@ -495,7 +499,17 @@
 
             const parsedStatus = JSON.parse(msg.data);
 
-            status.serverStatus = parsedStatus;
+            status.serverStatus = {
+                ...parsedStatus,
+                draftBotScript: parsedStatus.draftBotScript.map((s) => {
+
+                    const newScript = s
+                        .replace(/^.*{/, '')
+                        .replace(/async function anonymous\(page,context\n\) \{\n/, '')
+
+                    return `async (page, context) => {${newScript}`;
+                })
+            };
 
             if (status.editing === null) {
                 // Remove listeners
@@ -585,7 +599,6 @@
 
             // Disable interaction with a bot when disconnected
             mainContent.style.opacity = 0.3;
-            mainContent.style.pointerEvents = 'none';
         };
 
         const onError = (err) => {
