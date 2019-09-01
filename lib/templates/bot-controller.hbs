@@ -389,7 +389,7 @@
             fetch(`${serverHost}/bots/${botId}/control`, {
                 method: 'post',
                 body: JSON.stringify({
-                    status: { setting: 'index', val: setStepEl.value }
+                    status: { setting: 'index', val: parseInt(setStepEl.value) }
                 })
             });
         };
@@ -538,7 +538,7 @@
 
                 // Add new elements
                 draftBotScriptEl.innerHTML = status.serverStatus.draftBotScript.map((scriptFunc, i) => (`
-                    <tr id='step${i}'>
+                    <tr id='step${i}' ${i === status.serverStatus.index ? "class='current-step'" : ''}>
                         <td class='step-name'>Step ${i}</td>
                         <td class='code'>${scriptFunc}</td>
                         <td><button id='edit${i}' class='edit-toggle toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-pencil'></i></button></td>
