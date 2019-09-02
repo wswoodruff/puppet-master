@@ -131,6 +131,17 @@
             .CodeMirror.CodeMirror {
                 height: auto;
             }
+            .delete-btn.delete-btn {
+                /* Red */
+                background-color: rgba(244, 67, 54, 0.3);
+            }
+            .delete-btn.delete-btn:hover {
+                /* Red */
+                background-color: rgba(244, 67, 54, 1);
+            }
+            #playbackToolbar {
+                margin-top: 10px;
+            }
         </style>
         <!-- load icon font -->
         <link href='//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' type='text/css' />
@@ -160,18 +171,6 @@
                 <div class='mui--text-title'>Direction – <span id='currentDirection'>{{status.direction}}</span></div>
             </div>
 
-            <div class='mui-panel'>
-                <button id='playPause' style='margin: 15px 0;' class='mui-btn mui-btn--primary'>Pause</button>
-                <div style='display: flex; flex-flow: column nowrap; position: relative;'>
-                    <div id='playOneStatus' style='position: absolute; top: -5px;'></div>
-                    <button id='playOne' disabled style='margin: 15px 0;' class='mui-btn mui-btn--primary'>Play 1</button>
-                </div>
-                <div style='display: flex;'>
-                    <div class='mui-textfield'><input id='setStep' type='text' placeholder='Step' /></div>
-                    <button id='setStepBtn' style='margin: 15px 0 15px 15px;' type='text' class='mui-btn mui-btn--raised'>Set step</button>
-                </div>
-            </div>
-
             <div>
                 <div id='mainPanel'>
                     <div id='leftToolbar' class='toolbar'>
@@ -187,6 +186,19 @@
                             <button id='gotoUrl' style='margin: 15px 0 15px 15px;' class='mui-btn mui-btn--primary'>Go</button>
                         </div>
                         <img id='currentScreenshot' src={{screenshotPath}} />
+
+                        <div id='playbackToolbar' class='mui-panel'>
+                            <button id='playPause' style='margin: 15px 0;' class='mui-btn mui-btn--primary'>Pause</button>
+                            <div style='display: flex; flex-flow: column nowrap; position: relative;'>
+                                <div id='playOneStatus' style='position: absolute; top: -5px;'></div>
+                                <button id='playOne' disabled style='margin: 15px 0;' class='mui-btn mui-btn--primary'>Play 1</button>
+                            </div>
+                            <div style='display: flex;'>
+                                <div class='mui-textfield'><input id='setStep' type='text' placeholder='Step' /></div>
+                                <button id='setStepBtn' style='margin: 15px 0 15px 15px;' type='text' class='mui-btn mui-btn--raised'>Set step</button>
+                            </div>
+                        </div>
+
                         <div id='bottomToolbar'>
                             <table class='mui-table'>
                                 <thead>
@@ -195,16 +207,7 @@
                                         <td><button id='saveDraftBotScript' class='toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-floppy-o'></i></button></td>
                                     </tr>
                                 </thead>
-                                <tbody id='draftBotScript'>
-                                    {{#each status.draftBotScript}}
-                                        <tr id='step{{@index}}'>
-                                            <td class='step-name'>Step {{@index}}</td>
-                                            <td class='code'>{{this}}</td>
-                                            <td><button id='edit{{@index}}' class='edit-toggle toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-pencil'></i></button></td>
-                                            <td><button disabled id='save{{@index}}' class='save-btn toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-floppy-o'></i></button></td>
-                                        </tr>
-                                    {{/each}}
-                                </tbody>
+                                <tbody id='draftBotScript' />
                             </table>
                         </div>
                     </div>
@@ -488,12 +491,24 @@
             await fetch(`${serverHost}/bots/${botId}/control`, {
                 method: 'post',
                 body: JSON.stringify({
-                    update: { index: step, value: stepText }
+                    update: { index: parseInt(step), value: stepText }
                 })
             });
 
             const editBtnEl = document.querySelector(`#edit${step}`);
             editBtnEl.click();
+        };
+
+        const onDeleteStep = async (evt) => {
+
+            const step = String(evt.currentTarget.id).split('delete')[1];
+
+            await fetch(`${serverHost}/bots/${botId}/control`, {
+                method: 'post',
+                body: JSON.stringify({
+                    remove: parseInt(step)
+                })
+            });
         };
 
         const draftBotScriptEl = document.getElementById('draftBotScript');
@@ -518,7 +533,7 @@
                         // For functions formatted like 'async function anonymous (page,context ) {'
                         // This format comes from creating an AsyncFunction from a string,
                         // which is what we do server-side in the update step function
-                        .replace(/async function anonymous\(page,context\n\) \{\n/, '')
+                        .replace(/async function anonymous\(page,context\n\) \{\n/, '\n\n');
 
                     return `async (page, context) => {${newScript}`;
                 })
@@ -536,6 +551,11 @@
                     el.removeEventListener('click', onSaveStep);
                 });
 
+                Array.from(draftBotScriptEl.querySelectorAll('.delete-btn')).forEach((el) => {
+
+                    el.removeEventListener('click', onDeleteStep);
+                });
+
                 // Add new elements
                 draftBotScriptEl.innerHTML = status.serverStatus.draftBotScript.map((scriptFunc, i) => (`
                     <tr id='step${i}' ${i === status.serverStatus.index ? "class='current-step'" : ''}>
@@ -543,6 +563,7 @@
                         <td class='code'>${scriptFunc}</td>
                         <td><button id='edit${i}' class='edit-toggle toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-pencil'></i></button></td>
                         <td><button disabled id='save${i}' class='save-btn toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-floppy-o'></i></button></td>
+                        <td><button id='delete${i}' class='delete-btn toolbar-btn mui-btn mui-btn--danger mui-btn--fab'><i class='fa fa-minus-circle'></i></button></td>
                     </tr>
                 `)).join('');
 
@@ -555,6 +576,11 @@
                 Array.from(draftBotScriptEl.querySelectorAll('.save-btn')).forEach((el) => {
 
                     el.addEventListener('click', onSaveStep);
+                });
+
+                Array.from(draftBotScriptEl.querySelectorAll('.delete-btn')).forEach((el) => {
+
+                    el.addEventListener('click', onDeleteStep);
                 });
             }
 
