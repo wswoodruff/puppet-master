@@ -142,6 +142,14 @@
             #playbackToolbar {
                 margin-top: 10px;
             }
+            .add-btn.add-btn {
+                position: relative;
+                top: 46px;
+                opacity: 0.08;
+            }
+            .add-btn.add-btn:hover {
+                opacity: 1;
+            }
         </style>
         <!-- load icon font -->
         <link href='//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' type='text/css' />
@@ -511,6 +519,23 @@
             });
         };
 
+        const onAddStep = async (evt) => {
+
+            const step = parseInt(String(evt.currentTarget.id).split('addBetween')[1]) + 1;
+
+            const defaultFunc = async (page, context) => {
+
+                await page.waitFor(4000);
+            };
+
+            await fetch(`${serverHost}/bots/${botId}/control`, {
+                method: 'post',
+                body: JSON.stringify({
+                    add: { index: parseInt(step), value: defaultFunc.toString() }
+                })
+            });
+        };
+
         const draftBotScriptEl = document.getElementById('draftBotScript');
 
         const statusHandler = (msg) => {
@@ -556,6 +581,11 @@
                     el.removeEventListener('click', onDeleteStep);
                 });
 
+                Array.from(draftBotScriptEl.querySelectorAll('.add-btn')).forEach((el) => {
+
+                    el.removeEventListener('click', onAddStep);
+                });
+
                 // Add new elements
                 draftBotScriptEl.innerHTML = status.serverStatus.draftBotScript.map((scriptFunc, i) => (`
                     <tr id='step${i}' ${i === status.serverStatus.index ? "class='current-step'" : ''}>
@@ -564,6 +594,7 @@
                         <td><button id='edit${i}' class='edit-toggle toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-pencil'></i></button></td>
                         <td><button disabled id='save${i}' class='save-btn toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-floppy-o'></i></button></td>
                         <td><button id='delete${i}' class='delete-btn toolbar-btn mui-btn mui-btn--danger mui-btn--fab'><i class='fa fa-minus-circle'></i></button></td>
+                        <td><button id='addBetween${i}' class='add-btn toolbar-btn mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-plus'></i></button></td>
                     </tr>
                 `)).join('');
 
@@ -581,6 +612,11 @@
                 Array.from(draftBotScriptEl.querySelectorAll('.delete-btn')).forEach((el) => {
 
                     el.addEventListener('click', onDeleteStep);
+                });
+
+                Array.from(draftBotScriptEl.querySelectorAll('.add-btn')).forEach((el) => {
+
+                    el.addEventListener('click', onAddStep);
                 });
             }
 
