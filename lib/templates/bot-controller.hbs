@@ -38,7 +38,15 @@
                 padding: 0 15px;
             }
             .toolbar-btn.toolbar-btn {
+                width: 55px;
                 height: 55px;
+            }
+            #draftBotScript .toolbar-btn.toolbar-btn {
+                width: 40px;
+                height: 40px;
+            }
+            #draftBotScript .toolbar-btn.toolbar-btn .fa {
+                margin-left: 2px;
             }
             .toolbar-toggle.toolbar-toggle,
             .toolbar-toggle.toolbar-toggle:active,
@@ -92,6 +100,7 @@
             }
             .code {
                 width: 642px;
+                max-width: 642px;
             }
 
             /* edit-toggle */
@@ -100,6 +109,10 @@
             .edit-toggle.edit-toggle:focus {
                 /* Grey */
                 background-color: #9E9E9E;
+            }
+            #openDevtools {
+                /* Blue */
+                background-color: #2196F3;
             }
             .edit-toggle.edit-toggle:hover {
                 /* Green */
@@ -141,14 +154,6 @@
             }
             #playbackToolbar {
                 margin-top: 10px;
-            }
-            .add-btn.add-btn {
-                position: relative;
-                top: 46px;
-                opacity: 0.08;
-            }
-            .add-btn.add-btn:hover {
-                opacity: 1;
             }
         </style>
         <!-- load icon font -->
@@ -194,6 +199,7 @@
                             <button id='gotoUrl' style='margin: 15px 0 15px 15px;' class='mui-btn mui-btn--primary'>Go</button>
                         </div>
                         <img id='currentScreenshot' src={{screenshotPath}} />
+                        <img id='currentDevtoolsScreenshot' />
 
                         <div id='playbackToolbar' class='mui-panel'>
                             <button id='playPause' style='margin: 15px 0;' class='mui-btn mui-btn--primary'>Pause</button>
@@ -221,6 +227,7 @@
                     </div>
                     <div id='rightToolbar' class='toolbar'>
                         <button id='clickToggle' class='toolbar-btn toolbar-toggle mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-mouse-pointer'></i></button>
+                        <button id='openDevtools' class='toolbar-btn toolbar-toggle mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-bug'></i></button>
                     </div>
                 </div>
             </div>
@@ -234,6 +241,7 @@
     <script>
         const statusEl = document.getElementById('status');
         const screenshotEl = document.getElementById('currentScreenshot');
+        const devtoolsScreenshotEl = document.getElementById('currentDevtoolsScreenshot');
         const currentStepStatusEl = document.getElementById('currentStepStatus');
         const currentDirectionEl = document.getElementById('currentDirection');
         const connectionEl = document.getElementById('connection');
@@ -249,6 +257,7 @@
 
         // Toolbar
         const clickToggleEl = document.getElementById('clickToggle');
+        const openDevtoolsEl = document.getElementById('openDevtools');
         const refreshBtnEl = document.getElementById('refreshBtn');
         const scrollUpBtnEl = document.getElementById('scrollUpBtn');
         const scrollDownBtnEl = document.getElementById('scrollDownBtn');
@@ -261,12 +270,17 @@
         const serverHost = '{{serverUrl}}';
         const botId = '{{botId}}';
 
-        const status = { serverStatus: {}, toolbar: {}, editing: null };
+        const status = {
+            serverStatus: {},
+            toolbar: {},
+            editing: null,
+            click: false
+        };
 
         const refreshScreenshot = () => {
 
             const src = screenshotEl.src.split('?')[0];
-            screenshotEl.src = src + '?date=' + Date.now();
+            screenshotEl.src = `${src}?date=${Date.now()}`;
         };
 
         // Toolbar
@@ -429,6 +443,16 @@
             }
 
             clickToggleEl.blur();
+        };
+
+        openDevtoolsEl.onclick = () => {
+
+            fetch(`${serverHost}/bots/${botId}/control`, {
+                method: 'post',
+                body: JSON.stringify({
+                    openDevtools: true
+                })
+            });
         };
 
 
