@@ -48,6 +48,10 @@
             #draftBotScript .toolbar-btn.toolbar-btn .fa {
                 margin-left: 2px;
             }
+            #draftBotScript .delete-btn.delete-btn .fa,
+            #draftBotScript .add-btn.add-btn .fa {
+                margin-left: 1px;
+            }
             .toolbar-toggle.toolbar-toggle,
             .toolbar-toggle.toolbar-toggle:active,
             .toolbar-toggle.toolbar-toggle:focus {
@@ -227,7 +231,6 @@
                     </div>
                     <div id='rightToolbar' class='toolbar'>
                         <button id='clickToggle' class='toolbar-btn toolbar-toggle mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-mouse-pointer'></i></button>
-                        <button id='openDevtools' class='toolbar-btn toolbar-toggle mui-btn mui-btn--primary mui-btn--fab'><i class='fa fa-bug'></i></button>
                     </div>
                 </div>
             </div>
@@ -257,7 +260,6 @@
 
         // Toolbar
         const clickToggleEl = document.getElementById('clickToggle');
-        const openDevtoolsEl = document.getElementById('openDevtools');
         const refreshBtnEl = document.getElementById('refreshBtn');
         const scrollUpBtnEl = document.getElementById('scrollUpBtn');
         const scrollDownBtnEl = document.getElementById('scrollDownBtn');
@@ -443,16 +445,6 @@
             }
 
             clickToggleEl.blur();
-        };
-
-        openDevtoolsEl.onclick = () => {
-
-            fetch(`${serverHost}/bots/${botId}/control`, {
-                method: 'post',
-                body: JSON.stringify({
-                    openDevtools: true
-                })
-            });
         };
 
 
