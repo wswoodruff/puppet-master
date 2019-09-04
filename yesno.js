@@ -36,6 +36,7 @@ module.exports = {
 
             const fromPhoneNumber = await txtMeTwilioService.getDefaultOrRandomNumber();
             const TO_PHONE_NUMBER = '2073155407';
+            const NATES_PHONE_NUMBER = '3147533284';
 
             const img = await page.getElement('a[href="http://www.yesnobutton.com/answer.html"] img');
             const imgSrc = await page.evalHandle(img, 'src');
@@ -48,6 +49,12 @@ module.exports = {
                 await txtMeTwilioService.text({
                     from: fromPhoneNumber,
                     to: TO_PHONE_NUMBER,
+                    body: 'The answer was Yes!'
+                });
+
+                await txtMeTwilioService.text({
+                    from: fromPhoneNumber,
+                    to: NATES_PHONE_NUMBER,
                     body: 'The answer was Yes!'
                 });
             }
