@@ -9,21 +9,25 @@ module.exports = {
     script: [
         async (page, context) => {
 
+            console.log('Visiting yesnobutton...');
             await page.goto(context.url);
         },
         async (page, context) => {
 
             await page.click('a[href="answer.html"]');
+            console.log('Clicking the initial image');
             await page.waitFor(2000);
         },
         async (page, context) => {
 
             await page.click('a[href="http://www.yesnobutton.com/answer.html"]');
+            console.log('Clicking the yes or no image');
             await page.waitFor(2000);
         },
         async (page, context) => {
 
             await page.click('a[href="http://www.yesnobutton.com/answer.html"]');
+            console.log('Clicking the yes or no image again');
             await page.waitFor(2000);
 
             const {
@@ -46,17 +50,25 @@ module.exports = {
             const imgEndName = splitOnSlashes[splitOnSlashes.length - 1];
 
             if (imgEndName.match(/yes/)) {
+
+                console.log('\nIt\'s a yes!!');
+
+                console.log('Texting TO_PHONE_NUMBER');
                 await txtMeTwilioService.text({
                     from: fromPhoneNumber,
                     to: TO_PHONE_NUMBER,
                     body: 'The answer was Yes!'
                 });
 
+                console.log('Texting Nate!!');
                 await txtMeTwilioService.text({
                     from: fromPhoneNumber,
                     to: NATES_PHONE_NUMBER,
                     body: 'The answer was Yes!'
                 });
+            }
+            else {
+                console.log('\nIt\'s a no!!');
             }
         }
     ]
