@@ -51,7 +51,9 @@
             #draftBotScript .delete-btn.delete-btn .fa,
             #draftBotScript .add-btn.add-btn .fa {
                 margin-left: 1px;
+                margin-top: 1px;
             }
+
             .toolbar-toggle.toolbar-toggle,
             .toolbar-toggle.toolbar-toggle:active,
             .toolbar-toggle.toolbar-toggle:focus {
@@ -159,6 +161,9 @@
             #playbackToolbar {
                 margin-top: 10px;
             }
+            #currentScreenshot {
+                margin-top: 20px;
+            }
         </style>
         <!-- load icon font -->
         <link href='//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' type='text/css' />
@@ -182,12 +187,6 @@
         <div class='title mui--text-title' style='text-align: center;'>Connection: <span id='connection'>Good</span></div>
 
         <div id='mainContent'>
-            <div id='statusBar' class='mui-panel'>
-                <div class='mui--text-title'>Playing – <span id='isPlaying'>{{status.isPlaying}}</span></div>
-                <div class='mui--text-title'>Step – <span id='currentStepStatus'>{{status.index}}</span></div>
-                <div class='mui--text-title'>Direction – <span id='currentDirection'>{{status.direction}}</span></div>
-            </div>
-
             <div>
                 <div id='mainPanel'>
                     <div id='leftToolbar' class='toolbar'>
@@ -202,13 +201,24 @@
                             <div class='mui-textfield'><input id='url' type='text' placeholder='http://' /></div>
                             <button id='gotoUrl' style='margin: 15px 0 15px 15px;' class='mui-btn mui-btn--primary'>Go</button>
                         </div>
+
                         <img id='currentScreenshot' src={{screenshotPath}} />
                         <img id='currentDevtoolsScreenshot' />
 
+                        <div id='statusBar' class='mui-panel'>
+                            <div class='mui--text-title'>Playing – <span id='isPlaying'>{{status.isPlaying}}</span></div>
+                            <div class='mui--text-title'>Step – <span id='currentStepStatus'>{{status.index}}</span></div>
+                            <div class='mui--text-title'>Direction – <span id='currentDirection'>{{status.direction}}</span></div>
+                        </div>
+
                         <div id='playbackToolbar' class='mui-panel'>
-                            <button id='playPause' style='margin: 15px 0;' class='mui-btn mui-btn--primary'>Pause</button>
+                            <!-- <button id='playPause' style='margin: 15px 0;' class='mui-btn mui-btn--primary'>Pause</button> -->
                             <div style='display: flex; flex-flow: column nowrap; position: relative;'>
-                                <div id='playOneStatus' style='position: absolute; top: -5px;'></div>
+                                <div class='current-play-status' style='position: absolute; top: -5px;'></div>
+                                <button id='repeatOne' disabled style='margin: 15px 0;' class='mui-btn mui-btn--primary'>Repeat 1</button>
+                            </div>
+                            <div style='display: flex; flex-flow: column nowrap; position: relative;'>
+                                <div class='current-play-status' style='position: absolute; top: -5px;'></div>
                                 <button id='playOne' disabled style='margin: 15px 0;' class='mui-btn mui-btn--primary'>Play 1</button>
                             </div>
                             <div style='display: flex;'>
@@ -251,9 +261,11 @@
         const isPlayingEl = document.getElementById('isPlaying');
 
         // Controls
-        const playPauseEl = document.getElementById('playPause');
+        // const playPauseEl = document.getElementById('playPause');
         const playOneEl = document.getElementById('playOne');
-        const playOneStatusEl = document.getElementById('playOneStatus');
+        const repeatOneEl = document.getElementById('repeatOne');
+
+        const playStatusEls = Array.from(document.querySelectorAll('.current-play-status'));
         const setStepEl = document.getElementById('setStep');
         const setStepBtnEl = document.getElementById('setStepBtn');
         const saveDraftBotScriptEl = document.getElementById('saveDraftBotScript');
@@ -276,7 +288,17 @@
             serverStatus: {},
             toolbar: {},
             editing: null,
-            click: false
+            click: false,
+            repeatFlag: false
+        };
+
+        const offsetFunctionRunner = (func) => {
+
+            setTimeout(func, 100);
+            setTimeout(func, 500);
+            setTimeout(func, 1000);
+            setTimeout(func, 2000);
+            setTimeout(func, 3000);
         };
 
         const refreshScreenshot = () => {
@@ -296,10 +318,7 @@
                 })
             });
 
-            setTimeout(() => {
-
-                refreshScreenshot();
-            }, 100);
+            offsetFunctionRunner(refreshScreenshot);
         };
 
         navBackEl.onclick = async () => {
@@ -311,10 +330,7 @@
                 })
             });
 
-            setTimeout(() => {
-
-                refreshScreenshot();
-            }, 100);
+            offsetFunctionRunner(refreshScreenshot);
         };
 
         navFwdEl.onclick = async () => {
@@ -326,10 +342,7 @@
                 })
             });
 
-            setTimeout(() => {
-
-                refreshScreenshot();
-            }, 100);
+            offsetFunctionRunner(refreshScreenshot);
         };
 
         gotoUrlEl.onclick = async () => {
@@ -341,10 +354,7 @@
                 })
             });
 
-            setTimeout(() => {
-
-                refreshScreenshot();
-            }, 100);
+            offsetFunctionRunner(refreshScreenshot);
         };
 
         scrollUpBtnEl.onclick = async () => {
@@ -355,7 +365,8 @@
                     scroll: { x: 0, y: -400 }
                 })
             });
-            refreshScreenshot();
+
+            offsetFunctionRunner(refreshScreenshot);
         };
 
         scrollDownBtnEl.onclick = async () => {
@@ -366,7 +377,8 @@
                     scroll: { x: 0, y: 400 }
                 })
             });
-            refreshScreenshot();
+
+            offsetFunctionRunner(refreshScreenshot);
         };
 
         // Screenshot click listener
@@ -384,31 +396,44 @@
                     })
                 });
 
-                setTimeout(() => {
-
-                    refreshScreenshot();
-                }, 100);
+                offsetFunctionRunner(refreshScreenshot);
             }
         });
 
-        playPauseEl.onclick = () => {
+        // playPauseEl.onclick = () => {
+        //
+        //     fetch(`${serverHost}/bots/${botId}/control`, {
+        //         method: 'post',
+        //         body: JSON.stringify({
+        //             status: { setting: 'isPlaying', val: !status.serverStatus.isPlaying }
+        //         })
+        //     });
+        // };
 
-            fetch(`${serverHost}/bots/${botId}/control`, {
-                method: 'post',
-                body: JSON.stringify({
-                    status: { setting: 'isPlaying', val: !status.serverStatus.isPlaying }
-                })
-            });
-        };
+        playOneEl.onclick = async () => {
 
-        playOneEl.onclick = () => {
-
-            fetch(`${serverHost}/bots/${botId}/control`, {
+            await fetch(`${serverHost}/bots/${botId}/control`, {
                 method: 'post',
                 body: JSON.stringify({
                     playOne: true
                 })
             });
+
+            offsetFunctionRunner(refreshScreenshot);
+        };
+
+        repeatOneEl.onclick = async () => {
+
+            await fetch(`${serverHost}/bots/${botId}/control`, {
+                method: 'post',
+                body: JSON.stringify({
+                    playOne: true
+                })
+            });
+
+            status.repeatFlag = true;
+
+            offsetFunctionRunner(refreshScreenshot);
         };
 
         setStepBtnEl.onclick = () => {
@@ -554,7 +579,7 @@
 
         const draftBotScriptEl = document.getElementById('draftBotScript');
 
-        const statusHandler = (msg) => {
+        const statusHandler = async (msg) => {
 
             // Yes, the string 'undefined'. This points to a server issue,
             // will look into it later
@@ -644,9 +669,29 @@
 
             // Controls
             setStepEl.placeholder = `Step ${status.serverStatus.index}`;
-            playPauseEl.innerHTML = status.serverStatus.isPlaying ? 'Pause' : 'Play';
+            // playPauseEl.innerHTML = status.serverStatus.isPlaying ? 'Pause' : 'Play';
             playOneEl.disabled = status.serverStatus.isPlaying;
-            playOneStatusEl.innerHTML = status.serverStatus.playOne;
+            repeatOne.disabled = status.serverStatus.isPlaying;
+
+            if (playStatusEls) {
+                playStatusEls.forEach((statusEl) => {
+
+                    statusEl.innerHTML = status.serverStatus.playOne;
+                });
+            }
+
+            // Reset if it's a repeat
+            if (status.repeatFlag && typeof status.serverStatus.playOne !== 'undefined' && status.serverStatus.playOne.includes(':end')) {
+
+                await fetch(`${serverHost}/bots/${botId}/control`, {
+                    method: 'post',
+                    body: JSON.stringify({
+                        status: { setting: 'index', val: parseInt(status.serverStatus.playOne.split(':end')[0]) }
+                    })
+                });
+
+                status.repeatFlag = false;
+            }
 
             // Toolbar
             urlEl.value = status.serverStatus.url;

@@ -33,7 +33,14 @@ module.exports = new Confidence.Store({
                 plugin: '../lib', // Main plugin
                 options: {
                     killChromiumOnExit: process.env.KILL_CHROMIUM_ON_EXIT === '1',
-                    devtools: process.env.DEVTOOLS === '1'
+                    devtools: process.env.DEVTOOLS === '1',
+                    twilio: {
+                        account: {
+                            accountSid: process.env.SID,
+                            authToken: process.env.AUTH_TOKEN
+                        },
+                        defaultNumber: process.env.DEFAULT_NUMBER
+                    }
                 }
             },
             {
