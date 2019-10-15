@@ -1,1 +1,1 @@
-# undefined
+# puppet-master
